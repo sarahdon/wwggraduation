@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -46,10 +47,17 @@ func main() {
 	err = json.Unmarshal(data, &commands)
 
 	sort.Sort(commands)
+	data2, _ := json.Marshal(commands)
 
-	http.HandleFunc("/senddata", sendData)
+	instructions := bytes.NewReader(data2)
+	req, _ := http.NewRequest("POST", "http://172.16.15.79:9000/senddata", instructions)
 
-	http.ListenAndServe(":9000", http.DefaultServeMux)
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(resp.Status)
 
 }
 
@@ -60,5 +68,19 @@ func sendData(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	instructions := bytes.NewReader(data)
-	http.NewRequest("POST", "http://localhost:9000/senddata", instructions)
+	req, err := http.NewRequest("POST", "http://172.16.15.79:9000/senddata", instructions)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(resp.Status)
+
+	//d, err := ioutil.ReadAll(req.Body)
+
+	//rw.Write(d)
 }
